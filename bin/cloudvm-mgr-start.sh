@@ -1,3 +1,3 @@
 #!/bin/bash
-python $PWD/lib/runforever.py $1 &
+python $PWD/lib/cloudvmmanager/runforever.py $1 &
 
