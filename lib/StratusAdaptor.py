@@ -1,4 +1,4 @@
-from cloudvmmanager.utils import runCommand
+import checkstatus
 import time
 
 class StratusAdaptor:
@@ -7,12 +7,12 @@ class StratusAdaptor:
         pass
 
     def startvm(self):
-        a=runCommand("stratus-run-instance --endpoint=$STRATUSLAB_ENDPOINT --username=$STRATUSLAB_USERNAME --password=$STRATUSLAB_PASSWORD --key=$STRATUSLAB_KEY  $IMG")
+        a=checkstatus.runCommand("stratus-run-instance --endpoint=$STRATUSLAB_ENDPOINT --username=$STRATUSLAB_USERNAME --password=$STRATUSLAB_PASSWORD --key=$STRATUSLAB_KEY  $IMG")
         return a
 
  
     def stopvm(self, vmid):
-        runCommand("stratus-kill-instance --endpoint=$STRATUSLAB_ENDPOINT --username=$STRATUSLAB_USERNAME --password=$STRATUSLAB_PASSWORD "+vmid)
+        checkstatus.runCommand("stratus-kill-instance --endpoint=$STRATUSLAB_ENDPOINT --username=$STRATUSLAB_USERNAME --password=$STRATUSLAB_PASSWORD "+vmid)
 
 
 
@@ -32,10 +32,10 @@ class StratusAdaptor:
         a="0"
         while a=="0":
             time.sleep(120)
-            a=runCommand("stratus-describe-instance|grep "+vm_ip+"| awk '{print $4}'")
+            a=checkstatus.runCommand("stratus-describe-instance|grep "+vm_ip+"| awk '{print $4}'")
             a=str(a[0][0])
         if a!="0":
             time.sleep(240)
             r=StratusAdaptor()
             StratusAdaptor.execscript(r, vm_ip, master)
-            runCommand(". ./wnconf.sh")
+            checkstatus.runCommand(". ./wnconf.sh")

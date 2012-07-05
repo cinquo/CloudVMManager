@@ -3,8 +3,8 @@ import time
 import logging
 import ConfigParser, os
 import os
-from cloudvmmanager.StratusAdaptor import StratusAdaptor
-from cloudvmmanager.utils import runCommand
+from StratusAdaptor import StratusAdaptor
+
 
 
 #to get all values from configuration file and write to configLog
@@ -23,6 +23,12 @@ def getConfig(config,logger):
     logger.info('\nWORKER NODE SHUTDOWN DELAY: '+str(config.get('jobs','WN_SHUTDOWN_DELAY')))
     return x, y, z, LOG_DIR,master
 
+#function for running any command in bash
+def runCommand(command):
+    pipe = subprocess.Popen(command, stdout = subprocess.PIPE,
+                            stderr = subprocess.PIPE, shell = True)
+    stdout, stderr = pipe.communicate()
+    return stdout, pipe.returncode
 #function for running command condor_status
 def cstatus(z):
     a=runCommand("condor_status|"+z)
@@ -56,21 +62,19 @@ def main(config, logger):
         logger.error("condor_q failed with exitcode " + str(f[2]))
         return False
     try:
-        t=0
         logger.info('\nTIMESTAMP:'+str(time.asctime( time.localtime(time.time()) ))+'\nNumber of worker nodes : '+a[0]+'\nNumber of jobs submitted :'+b[0]+'\nNumber of jobs running :'+str(d[0])+'\nNumber of idle jobs :'+str(e[0])+'\nNumber of held jobs :'+str(f[0]))
         s=StratusAdaptor()
-        if a[0]<b[0] and int(a[0])<=int(y):
-            more_wn=int(b[0])-int(a[0])
-           logger.info('\nStart '+str(more_wn)+' more worker node(s)')
-           for i in range(0,more_wn):
-               new=StratusAdaptor.startvm(s)
-               new=new[0][new[0].index('134.'):new[0].index('Done')-5]
-               StratusAdaptor.configure_vm(s,new,master) 
+        if a[0]<b[0]:
+            logger.info('\nStart '+str(int(b[0])-int(a[0]))+' more worker node(s)')
+            new=StratusAdaptor.startvm(s)
+            new=new[0][new[0].index('134.'):new[0].index('Done')-5]
+            StratusAdaptor.configure_vm(s,new,master)
         elif a[0]>b[0]:
             #to shutdown nodes that are idle for too long
             q=runCommand( "condor_status -verbose|grep -E 'Machine = |EnteredCurrentActivity|Activity'|grep -v 'ClientMachine ='|awk '{ print $3 }'")
             q= q[0].split('\n')
             q.remove('')
+            t=0
             p=0
             for i in q:
                 if int(time.time())-int(q[p+2])<int(z) and q[p+1]=='"Idle"':

@@ -1,4 +1,4 @@
-from cloudvmmanager import checkstatus
+import checkstatus
 import time
 import ConfigParser, os
 import logging
