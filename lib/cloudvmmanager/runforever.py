@@ -13,12 +13,14 @@ def loadConfig(fileconfigname):
 
 runconfig = loadConfig(os.getcwd()+'/'+sys.argv[1])
 a = float(runconfig.get('jobs','SLEEPTIME', 120))
-LOG_DIR=str(os.getcwd()+'/LOGS')
+LOG_DIR=str('/tmp/my_controller_LOGS')
 
 logger = logging.getLogger('StatusLog')
 hdlr=logging.FileHandler(LOG_DIR+'/StatusLog')
 logger.addHandler(hdlr)
 logger.setLevel(logging.DEBUG)
+
+
 
 failcounter = 0
 while True:

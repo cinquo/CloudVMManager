@@ -1,3 +1,3 @@
 #!/bin/bash
-python $CLOUDVM_ROOT/lib/runforever.py $1 &
+python $PWD/lib/runforever.py $1 &
 

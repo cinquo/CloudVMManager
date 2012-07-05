@@ -3,29 +3,25 @@ import time
 import logging
 import ConfigParser, os
 import os
+from cloudvmmanager.StratusAdaptor import StratusAdaptor
+from cloudvmmanager.utils import runCommand
 
-#LOG_DIR = os.getcwd()
+
 #to get all values from configuration file and write to configLog
-def getConfig(config):
-    LOG_DIR=os.getcwd()+'/LOGS'
-    FILE =open(LOG_DIR+'/configLog','w')
+
+def getConfig(config,logger):
+    LOG_DIR='/tmp/my_controller_LOGS'
     x=config.get('jobs', 'MAX_JOBS_RUNNING')
     y=config.get('jobs', 'MAX_WORKER_NODES')
     z=config.get('jobs','WN_SHUTDOWN_DELAY')
-    FILE.write('\nTIMESTAMP:'+str(time.asctime( time.localtime(time.time()) )))
-    FILE.write('\nMAXIMUM NO. OF WORKER NODES: '+str(config.get('jobs', 'MAX_WORKER_NODES')))
-    FILE.write('\nMAXIMUM NO. OF JOBS RUNNING: '+str(config.get('jobs', 'MAX_JOBS_RUNNING')))
-    FILE.write('\nSLEEP TIME :'+str(config.get('jobs','SLEEPTIME')))
-    FILE.write('\nWORKER NODE SHUTDOWN DELAY: '+str(config.get('jobs','WN_SHUTDOWN_DELAY')))
-    FILE.close()
-    return x, y, z, LOG_DIR
-
-#function for running any command in bash
-def runCommand(command):
-    pipe = subprocess.Popen(command, stdout = subprocess.PIPE,
-                            stderr = subprocess.PIPE, shell = True)
-    stdout, stderr = pipe.communicate()
-    return stdout, pipe.returncode
+    master=config.get('jobs', 'MASTER_IP')
+    logger.info('\nTIMESTAMP:'+str(time.asctime( time.localtime(time.time()) )))
+    logger.info('\nMASTER:'+str(config.get('jobs','MASTER_IP')))
+    logger.info('\nMAXIMUM NO. OF WORKER NODES: '+str(config.get('jobs', 'MAX_WORKER_NODES')))
+    logger.info('\nMAXIMUM NO. OF JOBS RUNNING: '+str(config.get('jobs', 'MAX_JOBS_RUNNING')))
+    logger.info('\nSLEEP TIME :'+str(config.get('jobs','SLEEPTIME')))
+    logger.info('\nWORKER NODE SHUTDOWN DELAY: '+str(config.get('jobs','WN_SHUTDOWN_DELAY')))
+    return x, y, z, LOG_DIR,master
 
 #function for running command condor_status
 def cstatus(z):
@@ -37,7 +33,7 @@ def cq(z):
     return b
 
 def main(config, logger):
-    x, y, z, LOG_DIR = getConfig(config)
+    x, y, z, LOG_DIR,master = getConfig(config,logger)
     #to check for exit code of the executed commands
     a=cstatus("grep /LINUX|awk '{print $2}'")
     if a[1]!=0:
@@ -47,44 +43,57 @@ def main(config, logger):
     if b[1]!=0:
         logger.error("condor_q failed with exitcode " + str(b[2]))
         return False
-    c=cq("grep completed|awk '{print $3}'")
-    if c[1]!=0:
-        logger.error("condor_q failed with exitcode " + str(c[2]))
-        return False
-    d=cq("grep running|awk '{print $9}'")
+    d=cq("grep running|awk '{print $5}'")
     if d[1]!=0:
         logger.error("condor_q failed with exitcode " + str(d[2]))
         return False
-    e=cq("grep idle|awk '{print $7}'")
+    e=cq("grep idle|awk '{print $3}'")
     if e[1]!=0:
         logger.error("condor_q failed with exitcode " + str(e[2]))
         return False
-    f=cq("grep held|awk '{print $11}'")
+    f=cq("grep held|awk '{print $7}'")
     if f[1]!=0:
         logger.error("condor_q failed with exitcode " + str(f[2]))
         return False
     try:
-        logger.info('\nTIMESTAMP:'+str(time.asctime( time.localtime(time.time()) ))+'\nNumber of worker nodes : '+a[0]+'\nNumber of jobs submitted :'+b[0]+'\nNumber of jobs completed :'+str(c[0])+'\nNumber of jobs running :'+str(d[0])+'\nNumber of idle jobs :'+str(e[0])+'\nNumber of held jobs :'+str(f[0]))
+        logger.info('\nTIMESTAMP:'+str(time.asctime( time.localtime(time.time()) ))+'\nNumber of worker nodes : '+a[0]+'\nNumber of jobs submitted :'+b[0]+'\nNumber of jobs running :'+str(d[0])+'\nNumber of idle jobs :'+str(e[0])+'\nNumber of held jobs :'+str(f[0]))
+        s=StratusAdaptor()
         if a[0]<b[0]:
             logger.info('\nStart '+str(int(b[0])-int(a[0]))+' more worker node(s)')
+            new=StratusAdaptor.startvm(s)
+            new=new[0][new[0].index('134.'):new[0].index('Done')-5]
+            StratusAdaptor.configure_vm(s,new,master)
         elif a[0]>b[0]:
             #to shutdown nodes that are idle for too long
-            q=runCommand( "condor_status -verbose|grep -E 'Machine = |TotalTimeUnclaimedIdle'|awk '{ print $3 }'")
-            #print q
+            q=runCommand( "condor_status -verbose|grep -E 'Machine = |EnteredCurrentActivity|Activity'|grep -v 'ClientMachine ='|awk '{ print $3 }'")
             q= q[0].split('\n')
             q.remove('')
-            #print q
             t=0
             p=0
             for i in q:
-                #print q[p], q[p+1]
-                if int(q[p+1])<int(z):
+                if int(time.time())-int(q[p+2])<int(z) and q[p+1]=='"Idle"':
                     t+=1
-                if int(q[p+1])>int(z):
+                if int(time.time())-int(q[p+2])>int(z) and q[p+1]=='"Idle"':
                     #print 'Shutting down worker node :'+ q[p]
-                    t-=1
-                    logger.info('Shutting down worker node :'+ q[p]+' because it is unused for a long time')
-                if p+3<len(q)-1:
+                    t-=1        
+                    mip=q[p][q[p].index('-')+1:q[p].index('.')]
+                    vm_id=StratusAdaptor.vmstatus(s,'{print $1}')
+                    vm_ip=StratusAdaptor.vmstatus(s,'{print $6}')
+                    vm_id=vm_id[0].split('\n')
+                    vm_id=vm_id[1:]
+                    vm_id.remove('')
+                    print vm_id
+                    vm_ip=vm_ip[0].split('\n')
+                    vm_ip.remove('')
+                    vm_ip.remove('ip')
+                    print vm_ip
+                    maddr='134.158.75.'+mip
+                    logger.info('Shutting down worker node :'+ q[p]+':'+maddr+' because it is unused for a long time')
+                    for i in vm_ip:
+                        if i==maddr:
+                            g=vm_ip.index(i)
+                    StratusAdaptor.killvm(s,vm_id[g])
+                if p+3<len(q):
                     p+=3
                 else:
                     break
@@ -109,3 +118,4 @@ if __name__=="__main__":
     config = ConfigParser.ConfigParser()
     config.readfp(open('jobconfig.cfg'))
     main(config, logger)                     
+
