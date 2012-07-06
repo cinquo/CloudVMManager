@@ -56,16 +56,26 @@ def main(config, logger):
         logger.error("condor_q failed with exitcode " + str(f[2]))
         return False
     try:
-        t=0
         logger.info('\nTIMESTAMP:'+str(time.asctime( time.localtime(time.time()) ))+'\nNumber of worker nodes : '+a[0]+'\nNumber of jobs submitted :'+b[0]+'\nNumber of jobs running :'+str(d[0])+'\nNumber of idle jobs :'+str(e[0])+'\nNumber of held jobs :'+str(f[0]))
         s=StratusAdaptor()
+        t=0
+        if a[0]=='' or a[0]="":
+            a[0]=0
         if a[0]<b[0] and int(a[0])<=int(y):
-            more_wn=int(b[0])-int(a[0])
-           logger.info('\nStart '+str(more_wn)+' more worker node(s)')
-           for i in range(0,more_wn):
-               new=StratusAdaptor.startvm(s)
-               new=new[0][new[0].index('134.'):new[0].index('Done')-5]
-               StratusAdaptor.configure_vm(s,new,master) 
+            if int(b[0])<=int(y):
+                more_wn=int(b[0])-int(a[0])
+            else:
+                more_wn=int(y)-int(a[0])
+            logger.info('\nStart '+str(more_wn)+' more worker node(s)')
+            new_list=[]
+            for i in range(0,more_wn):
+                new=StratusAdaptor.startvm(s)
+                new=new[0][new[0].index('134.'):new[0].index('Done')-5]
+                new_list.append(new)
+            for i in new_list:
+                st=StratusAdaptor.configure_vm(s,i,master)
+                if st!=0:
+                    logger.warning("Machine failed to start....Killing instance "+st)
         elif a[0]>b[0]:
             #to shutdown nodes that are idle for too long
             q=runCommand( "condor_status -verbose|grep -E 'Machine = |EnteredCurrentActivity|Activity'|grep -v 'ClientMachine ='|awk '{ print $3 }'")
@@ -76,8 +86,8 @@ def main(config, logger):
                 if int(time.time())-int(q[p+2])<int(z) and q[p+1]=='"Idle"':
                     t+=1
                 if int(time.time())-int(q[p+2])>int(z) and q[p+1]=='"Idle"':
-                    #print 'Shutting down worker node :'+ q[p]
-                    t-=1        
+                    print 'Shutting down worker node :'+ q[p]
+                    t-=1
                     mip=q[p][q[p].index('-')+1:q[p].index('.')]
                     vm_id=StratusAdaptor.vmstatus(s,'{print $1}')
                     vm_ip=StratusAdaptor.vmstatus(s,'{print $6}')
