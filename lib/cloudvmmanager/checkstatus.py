@@ -86,7 +86,6 @@ def main(config, logger):
                 if int(time.time())-int(q[p+2])<int(z) and q[p+1]=='"Idle"':
                     t+=1
                 if int(time.time())-int(q[p+2])>int(z) and q[p+1]=='"Idle"':
-                    print 'Shutting down worker node :'+ q[p]
                     t-=1
                     mip=q[p][q[p].index('-')+1:q[p].index('.')]
                     vm_id=StratusAdaptor.vmstatus(s,'{print $1}')
@@ -94,11 +93,9 @@ def main(config, logger):
                     vm_id=vm_id[0].split('\n')
                     vm_id=vm_id[1:]
                     vm_id.remove('')
-                    print vm_id
                     vm_ip=vm_ip[0].split('\n')
                     vm_ip.remove('')
                     vm_ip.remove('ip')
-                    print vm_ip
                     maddr='134.158.75.'+mip
                     logger.info('Shutting down worker node :'+ q[p]+':'+maddr+' because it is unused for a long time')
                     for i in vm_ip:
