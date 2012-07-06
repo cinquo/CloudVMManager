@@ -61,7 +61,7 @@ def main(config, logger):
         t=0
         if a[0]=='' or a[0]="":
             a[0]=0
-        if a[0]<b[0] and int(a[0])<=int(y):
+        if int(a[0])<int(b[0]) and int(a[0])<=int(y):
             if int(b[0])<=int(y):
                 more_wn=int(b[0])-int(a[0])
             else:
