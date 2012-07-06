@@ -22,7 +22,7 @@ class StratusAdaptor:
     
 
     def execscript(self, vm_ip,master):
-        s="ssh -i $PWD/stratuslab-client/stratuslab/.ssh/_id_rsa -o StrictHostKeyChecking=no -l root "+vm_ip+" 'wget http://dl.dropbox.com/u/21527180/wnconfig.sh;chmod 755 wnconfig.sh;. ./wnconfig.sh "+master+"'"
+        s="ssh -i $PWD/$STRATUSLAB_PRIVATE_KEY -o StrictHostKeyChecking=no -l root "+vm_ip+" 'wget http://dl.dropbox.com/u/21527180/wnconfig.sh;chmod 755 wnconfig.sh;. ./wnconfig.sh "+master+"'"
         File=open("wnconf.sh",'w')
         File.write(s)
         File.close()
