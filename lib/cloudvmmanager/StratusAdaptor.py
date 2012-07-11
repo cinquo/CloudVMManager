@@ -22,7 +22,7 @@ class StratusAdaptor:
     
 
     def execscript(self, vm_ip,master):
-        s="ssh -i $PWD/$STRATUSLAB_PRIVATE_KEY -o StrictHostKeyChecking=no -l root "+vm_ip+" 'wget http://dl.dropbox.com/u/21527180/wnconfig.sh;chmod 755 wnconfig.sh;. ./wnconfig.sh "+master+"'"
+        s="ssh -i $PWD/$STRATUSLAB_PRIVATE_KEY -o StrictHostKeyChecking=no -l root "+vm_ip+" 'wget http://dl.dropbox.com/u/21527180/wnconfig_analysis.sh;chmod 755 wnconfig_analysis.sh;. ./wnconfig_analysis.sh "+master+"'"
         File=open("wnconf.sh",'w')
         File.write(s)
         File.close()
@@ -42,6 +42,8 @@ class StratusAdaptor:
         if a!="0" and b!="Failed":
             time.sleep(240)
             StratusAdaptor.execscript(r, vm_ip, master)
+            #optional command for analysis jobs proxy server
+            runCommand("scp -o StrictHostKeyChecking=no -i $PWD/stratuslab-client/stratuslab/.ssh/_id_rsa /home/cms001/crab/CMSSW_5_0_1/src/x509up_u15305 root@"+ vm_ip +":/data")
             runCommand(". ./wnconf.sh")
             return 0
         elif b=="Failed":
