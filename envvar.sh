@@ -1,3 +1,4 @@
+#! /bin/sh
 source /cvmfs/cms.cern.ch/slc5_amd64_gcc462/external/python/2.6.4-cms/etc/profile.d/init.sh 
 export PATH=$PATH:$PWD/bin/:$PWD/lib/:<stratuslab client bin path>
 export PYTHONPATH=$PYTHONPATH:$PWD/lib/:$PWD/bin/:<also the stratusab client python path>
