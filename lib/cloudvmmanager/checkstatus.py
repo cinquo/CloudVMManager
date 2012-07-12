@@ -59,8 +59,8 @@ def main(config, logger):
         logger.info('\nTIMESTAMP:'+str(time.asctime( time.localtime(time.time()) ))+'\nNumber of worker nodes : '+a[0]+'\nNumber of jobs submitted :'+b[0]+'\nNumber of jobs running :'+str(d[0])+'\nNumber of idle jobs :'+str(e[0])+'\nNumber of held jobs :'+str(f[0]))
         s=StratusAdaptor()
         t=0
-        if a[0]=='' or a[0]="":
-            a[0]=0
+        if a[0]=='' or a[0]=="":
+            a=('0',)+a[1:]
         if int(a[0])<int(b[0]) and int(a[0])<=int(y):
             if int(b[0])<=int(y):
                 more_wn=int(b[0])-int(a[0])
