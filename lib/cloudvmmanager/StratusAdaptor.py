@@ -1,5 +1,6 @@
 from cloudvmmanager.utils import runCommand
 import time
+import base64
 
 class StratusAdaptor:
 
@@ -7,7 +8,11 @@ class StratusAdaptor:
         pass
 
     def startvm(self):
-        a=runCommand("stratus-run-instance --endpoint=$STRATUSLAB_ENDPOINT --username=$STRATUSLAB_USERNAME --password=$STRATUSLAB_PASSWORD --key=$STRATUSLAB_KEY  $IMG")
+        runCommand("wget --directory-prefix=/tmp/ http://dl.dropbox.com/u/21527180/wnconfig_analysis.sh")
+        f = open("/tmp/wnconfig_analysis.sh",'r')
+        s = f.read()
+        f.close()
+        a=runCommand("stratus-run-instance --context=\"EC2_USER_DATA=" + base64.standard_b64encode(s) + "\" --endpoint=$STRATUSLAB_ENDPOINT --username=$STRATUSLAB_USERNAME --password=$STRATUSLAB_PASSWORD --key=$STRATUSLAB_KEY  $IMG")
         return a
 
  

@@ -72,9 +72,9 @@ def main(config, logger):
                 new=StratusAdaptor.startvm(s)
                 new=new[0][new[0].index('134.'):new[0].index('Done')-5]
                 new_list.append(new)
-            for i in new_list:
-                st=StratusAdaptor.configure_vm(s,i,master)
-                if st!=0:
+            #for i in new_list:
+                #st=StratusAdaptor.configure_vm(s,i,master)
+                #if st!=0:
                     logger.warning("Machine failed to start....Killing instance "+st)
         elif a[0]>b[0]:
             #to shutdown nodes that are idle for too long
