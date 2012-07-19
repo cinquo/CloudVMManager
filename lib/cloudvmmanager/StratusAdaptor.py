@@ -8,11 +8,12 @@ class StratusAdaptor:
         pass
 
     def startvm(self, master):
-        runCommand("wget --directory-prefix=/tmp/ http://dl.dropbox.com/u/21527180/wnconfig_analysis.sh")
+        runCommand("wget --directory-prefix=/tmp/ https://raw.github.com/fbarreir/CloudVMManager/master/wnconfig_analysis.sh --no-check-certificate")
         f = open("/tmp/wnconfig_analysis.sh",'r')
         s = f.read()
         f.close()
-        a=runCommand('stratus-run-instance --context="EC2_USER_DATA=' + base64.standard_b64encode('#!/bin/sh\n' + s.replace('$1', master).replace('"', "'")) + '" --endpoint=$STRATUSLAB_ENDPOINT --username=$STRATUSLAB_USERNAME --password=$STRATUSLAB_PASSWORD --key=$STRATUSLAB_KEY  $IMG')
+        runCommand("rm -f /tmp/wnconfig_analysis.sh")
+        a=runCommand('stratus-run-instance --context="EC2_USER_DATA=' + base64.standard_b64encode(s.replace('$1', master)) + '" --endpoint=$STRATUSLAB_ENDPOINT --username=$STRATUSLAB_USERNAME --password=$STRATUSLAB_PASSWORD --key=$STRATUSLAB_KEY  $IMG')
         return a
 
  

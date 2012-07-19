@@ -17,6 +17,8 @@ sed -i 's/CONFIG_CONDOR_MASTER=`hostname -f`/CONFIG_CONDOR_MASTER=$MHOSTNAME/g' 
 #condor_reconfig;
 #/etc/init.d/condor stop;
 
+sed -i 's%JAVA = /usr/bin/java%JAVA = /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/bin/java%' /etc/condor/condor_config
+
 
 #to configure cvfms
 mkdir /data/T1_FR_CCIN2P3
