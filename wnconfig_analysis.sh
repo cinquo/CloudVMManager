@@ -24,10 +24,9 @@ sed -i 's%JAVA = /usr/bin/java%JAVA = /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x8
 mkdir /data/T1_FR_CCIN2P3
 
 /etc/cernvm/config -c site CERNVM_ORGANISATION=CMS;
-/etc/init.d/cvmfs stop;
+/etc/init.d/cvmfs restartclean;
 cp -r /cvmfs/cms.cern.ch/SITECONF/T1_FR_CCIN2P3/* /data/T1_FR_CCIN2P3/;
 echo 'export CMS_LOCAL_SITE=/data/T1_FR_CCIN2P3' > /etc/cvmfs/domain.d/cern.ch.local;
-/etc/init.d/cvmfs flush;
 /etc/init.d/cvmfs restartclean;
 wget http://dl.dropbox.com/u/21527180/storage.xml;
 wget http://dl.dropbox.com/u/21527180/site-local-config.xml;
