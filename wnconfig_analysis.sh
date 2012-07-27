@@ -3,19 +3,19 @@
 conary update condor:runtime;
 export PATH=$PATH:/opt/condor/sbin/:/opt/condor/bin/condor/:/etc/condor/:/opt/condor/bin/;
 wget http://dl.dropbox.com/u/21527180/condor_config;
-#/etc/init.d/condor start;
+/etc/init.d/condor start;
 sed -i 's/HOSTNAME/MHOSTNAME/g' condor_config ;
 sed -i '12iMHOSTNAME='$1 condor_config
 rm -rf /etc/condor/condor_config;
 mv condor_config /etc/condor/;
-#condor_reconfig;
+condor_reconfig;
 sed -i '83icondor       ALL=(ALL)       ALL' /etc/sudoers;
 sed -i '12iMHOSTNAME='$1 /etc/init.d/condor;
 sed -i 's/CONFIG_CONDOR_UID_DOMAIN:=`hostname -d`/CONFIG_CONDOR_UID_DOMAIN:=$MHOSTNAME/g' /etc/init.d/condor;
 sed -i 's/CONFIG_CONDOR_FILESYSTEM_DOMAIN=${CONFIG_CONDOR_FILESYSTEM_DOMAIN:=`hostname -f`/CONFIG_CONDOR_FILESYSTEM_DOMAIN=${CONFIG_CONDOR_FILESYSTEM_DOMAIN:=$MHOSTNAME/g' /etc/init.d/condor;
 sed -i 's/CONFIG_CONDOR_MASTER=`hostname -f`/CONFIG_CONDOR_MASTER=$MHOSTNAME/g' /etc/init.d/condor;
-#condor_reconfig;
-#/etc/init.d/condor stop;
+condor_reconfig;
+/etc/init.d/condor stop;
 
 sed -i 's%JAVA = /usr/bin/java%JAVA = /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/bin/java%' /etc/condor/condor_config
 
@@ -27,6 +27,11 @@ sed -i '/SLOT1_USER.*/ d' /etc/condor/condor_config.local
 sed -i '/ALLOW_WRITE.*/ d' /etc/condor/condor_config.local
 sed -i '/DEDICATED_EXECUTE_ACCOUNT_REGEXP.*/ d' /etc/condor/condor_config.local
 sed -i '/DAEMON_LIST.*/ d' /etc/condor/condor_config.local
+
+sed -i 's/CONDOR_HOST.*/CONDOR_HOST = $1/' /etc/condor/condor_config.local
+sed -i 's/CONDOR_ADMIN.*/CONDOR_ADMIN = $1/' /etc/condor/condor_config.local
+sed -i 's/FILESYSTEM_DOMAIN.*/FILESYSTEM_DOMAIN = $1/' /etc/condor/condor_config.local
+
 echo 'ALLOW_WRITE = *' >> /etc/condor/condor_config.local
 echo 'DEDICATED_EXECUTE_ACCOUNT_REGEXP = cms00[1-8]+' >> /etc/condor/condor_config.local
 echo 'DAEMON_LIST = MASTER, STARTD' >> /etc/condor/condor_config.local
