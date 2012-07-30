@@ -13,7 +13,7 @@ class StratusAdaptor:
         s = f.read()
         f.close()
         runCommand("rm -f /tmp/wnconfig_analysis.sh")
-        a=runCommand('stratus-run-instance --context="EC2_USER_DATA=' + base64.standard_b64encode(s.replace('$1', master, 5)) + '" --endpoint=$STRATUSLAB_ENDPOINT --username=$STRATUSLAB_USERNAME --password=$STRATUSLAB_PASSWORD --key=$STRATUSLAB_KEY  $IMG')
+        a=runCommand('stratus-run-instance --context="EC2_USER_DATA=' + base64.standard_b64encode(s.replace('$1', master, 1)) + '" --endpoint=$STRATUSLAB_ENDPOINT --username=$STRATUSLAB_USERNAME --password=$STRATUSLAB_PASSWORD --key=$STRATUSLAB_KEY  $IMG')
         return a
 
  
